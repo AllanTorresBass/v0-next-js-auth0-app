@@ -1,5 +1,5 @@
 import { getSession } from "@/lib/mock-auth/mock-session"
-import type { UserRole } from "./rbac/permissions"
+import type { UserRole, Permission } from "./rbac/permissions"
 
 export async function getServerSession() {
   return await getSession()
@@ -11,6 +11,7 @@ export interface Auth0User {
   name: string
   picture?: string
   role?: UserRole
+  customPermissions?: Permission[]
 }
 
 export async function getCurrentUser(): Promise<Auth0User | null> {

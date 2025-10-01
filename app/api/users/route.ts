@@ -20,7 +20,7 @@ export async function GET() {
     }
 
     const auth0Users = await getAllUsers()
-
+console.log(JSON.stringify(auth0Users, null, 2))
     // Transform Auth0 users to our app format
     const users = auth0Users.map((user) => ({
       id: user.user_id || "",

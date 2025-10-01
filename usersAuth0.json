@@ -1,0 +1,149 @@
+[
+    {
+      "user_id": "auth0|68dc896be45d0d269e3a32a9",
+      "nickname": "allan",
+      "picture": "https://s.gravatar.com/avatar/0085681b8203ea25d4ba5e3c180ee8c6?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fwa.png",
+      "email_verified": true,
+      "created_at": "2025-10-01T01:52:43.274Z",
+      "updated_at": "2025-10-01T12:12:23.019Z",
+      "identities": [
+        {
+          "connection": "Username-Password-Authentication",
+          "user_id": "68dc896be45d0d269e3a32a9",
+          "provider": "auth0",
+          "isSocial": false
+        }
+      ],
+      "email": "allan@webtrixpro.com",
+      "name": "Webtixpro AT",
+      "app_metadata": {
+        "customPermissions": [
+          "users:read",
+          "dashboard:view_all",
+          "reports:view",
+          "reports:create",
+          "dashboard:view_own",
+          "users:create",
+          "users:delete"
+        ],
+        "role": "sales_senior",
+        "status": "active"
+      }
+    },
+    {
+      "user_id": "auth0|68dc8f6eedd2ea4f4c1521cd",
+      "email": "tiprismacapital@gmail.com",
+      "name": "Sale person Junior",
+      "nickname": "tiprismacapital",
+      "email_verified": true,
+      "picture": "https://s.gravatar.com/avatar/c3032010479e0ba3a16abaa0957701f0?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fsp.png",
+      "created_at": "2025-10-01T02:18:22.140Z",
+      "updated_at": "2025-10-01T12:11:56.380Z",
+      "identities": [
+        {
+          "connection": "Username-Password-Authentication",
+          "user_id": "68dc8f6eedd2ea4f4c1521cd",
+          "provider": "auth0",
+          "isSocial": false
+        }
+      ],
+      "app_metadata": {
+        "customPermissions": [
+          "dashboard:view_own",
+          "reports:view"
+        ],
+        "role": "sales_junior",
+        "status": "active"
+      }
+    },
+    {
+      "email": "atorres@optecllc.com",
+      "name": "Client User",
+      "nickname": "atorres",
+      "picture": "https://s.gravatar.com/avatar/f3d41e7bbace20423dba39ffc365a7db?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fcu.png",
+      "email_verified": true,
+      "user_id": "auth0|68dc9035e45d0d269e3a35af",
+      "created_at": "2025-10-01T02:21:42.003Z",
+      "updated_at": "2025-10-01T12:11:28.714Z",
+      "identities": [
+        {
+          "connection": "Username-Password-Authentication",
+          "user_id": "68dc9035e45d0d269e3a35af",
+          "provider": "auth0",
+          "isSocial": false
+        }
+      ],
+      "app_metadata": {
+        "status": "active",
+        "customPermissions": [
+          "dashboard:view_own"
+        ],
+        "role": "client"
+      }
+    },
+    {
+      "updated_at": "2025-10-01T02:27:29.443Z",
+      "user_id": "auth0|68dc8ff5edd2ea4f4c15221b",
+      "nickname": "atorres",
+      "picture": "https://s.gravatar.com/avatar/37b37c0c7ec410a32bf8cd8bc793cec4?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fju.png",
+      "email_verified": false,
+      "created_at": "2025-10-01T02:20:37.512Z",
+      "identities": [
+        {
+          "connection": "Username-Password-Authentication",
+          "user_id": "68dc8ff5edd2ea4f4c15221b",
+          "provider": "auth0",
+          "isSocial": false
+        }
+      ],
+      "email": "atorres@jokertechnologies.com",
+      "name": "Joker User",
+      "app_metadata": {
+        "status": "active",
+        "customPermissions": [
+          "users:read",
+          "users:create",
+          "users:update",
+          "dashboard:view_all",
+          "reports:view",
+          "reports:create",
+          "settings:manage"
+        ],
+        "role": "marketing_senior"
+      }
+    },
+    {
+      "created_at": "2025-10-01T01:38:59.120Z",
+      "updated_at": "2025-10-01T02:07:07.284Z",
+      "picture": "https://s.gravatar.com/avatar/50a15628d00066078cc6874b53a9c0d0?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fat.png",
+      "identities": [
+        {
+          "user_id": "68dc8633e45d0d269e3a3147",
+          "provider": "auth0",
+          "isSocial": false,
+          "connection": "Username-Password-Authentication"
+        }
+      ],
+      "user_id": "auth0|68dc8633e45d0d269e3a3147",
+      "email": "allaneduardot@gmail.com",
+      "name": "Allan Torres",
+      "nickname": "allaneduardot",
+      "email_verified": false,
+      "app_metadata": {
+        "role": "admin",
+        "status": "active",
+        "customPermissions": [
+          "users:read",
+          "users:create",
+          "users:update",
+          "users:delete",
+          "users:manage_roles",
+          "dashboard:view_all",
+          "reports:view",
+          "reports:create",
+          "settings:manage",
+          "dashboard:view_own"
+        ]
+      }
+    }
+  ]

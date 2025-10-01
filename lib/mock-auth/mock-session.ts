@@ -1,4 +1,4 @@
-import type { UserRole } from "@/lib/rbac/permissions"
+import type { UserRole, Permission } from "@/lib/rbac/permissions"
 
 interface MockSession {
   user: {
@@ -7,6 +7,7 @@ interface MockSession {
     name: string
     picture?: string
     role?: UserRole
+    customPermissions?: Permission[]
     email_verified?: boolean
     updated_at?: string
   }
