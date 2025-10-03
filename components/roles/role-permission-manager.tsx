@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
@@ -29,6 +29,7 @@ export function RolePermissionManager({ role, onClose, onPermissionsUpdated }: R
   const [rolePermissions, setRolePermissions] = useState<Auth0Permission[]>([])
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([])
   const [searchTerm, setSearchTerm] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState<string>("all")
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -46,6 +47,36 @@ export function RolePermissionManager({ role, onClose, onPermissionsUpdated }: R
       console.log('[RolePermissionManager] Loaded role permissions:', currentPermissionIds)
     }
   }, [rolePermissions])
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey) {
+        switch (event.key) {
+          case 'a':
+            event.preventDefault()
+            handleSelectAll()
+            break
+          case 'd':
+            event.preventDefault()
+            handleSelectNone()
+            break
+          case 's':
+            event.preventDefault()
+            if (!isSaving && !isLoading && error === null) {
+              handleSave()
+            }
+            break
+        }
+      }
+      if (event.key === 'Escape') {
+        onClose()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isSaving, isLoading, error])
 
   const fetchPermissions = async () => {
     try {
@@ -132,10 +163,21 @@ export function RolePermissionManager({ role, onClose, onPermissionsUpdated }: R
   }
 
   const getFilteredPermissions = () => {
-    return availablePermissions.filter(permission =>
-      permission.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      permission.description.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    return availablePermissions.filter(permission => {
+      const matchesSearch = permission.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        permission.description.toLowerCase().includes(searchTerm.toLowerCase())
+      
+      const matchesCategory = selectedCategory === "all" || 
+        permission.category === selectedCategory ||
+        (permission.category === undefined && selectedCategory === "other")
+      
+      return matchesSearch && matchesCategory
+    })
+  }
+
+  const getAvailableCategories = () => {
+    const categories = new Set(availablePermissions.map(p => p.category || 'other'))
+    return Array.from(categories).sort()
   }
 
   const handleSave = async () => {
@@ -250,45 +292,101 @@ export function RolePermissionManager({ role, onClose, onPermissionsUpdated }: R
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
-        <DialogHeader>
-          <DialogTitle>Manage Permissions for {role.name}</DialogTitle>
-          <DialogDescription>
-            Select the permissions that should be assigned to this role.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="flex-1 overflow-hidden flex flex-col gap-4">
-          {/* Search and Controls */}
-          <div className="flex items-center gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search permissions..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
-              />
+      <DialogContent className="max-w-7xl max-h-[90vh] w-[95vw] overflow-hidden flex flex-col">
+        <DialogHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <DialogTitle className="text-2xl font-bold flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Shield className="w-6 h-6 text-primary" />
+                </div>
+                Manage Permissions for <span className="text-primary">{role.name}</span>
+              </DialogTitle>
+              <DialogDescription className="text-base mt-2">
+                Configure the permissions that should be assigned to this role. Users with this role will have access to the selected permissions.
+              </DialogDescription>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={handleSelectAll}>
-                Select All
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleSelectNone}>
-                Select None
-              </Button>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-sm">
+                {selectedCount} of {totalCount} selected
+              </Badge>
             </div>
           </div>
+        </DialogHeader>
 
-          {/* Selection Summary */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Shield className="w-4 h-4" />
-            <span>{selectedCount} of {totalCount} permissions selected</span>
-            {selectedCount > 0 && (
-              <Badge variant="secondary" className="ml-2">
-                {selectedCount} selected
-              </Badge>
-            )}
+        <div className="flex-1 overflow-hidden flex flex-col gap-6">
+          {/* Enhanced Search and Controls */}
+          <div className="bg-muted/30 rounded-lg p-4">
+            <div className="flex flex-col lg:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search permissions by name, description, or category..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9 h-11 text-base"
+                />
+              </div>
+              
+              {/* Category Filter */}
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-muted-foreground">Category:</label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="h-11 px-3 rounded-md border border-input bg-background text-sm"
+                >
+                  <option value="all">All Categories</option>
+                  {getAvailableCategories().map(category => (
+                    <option key={category} value={category}>
+                      {category.charAt(0).toUpperCase() + category.slice(1)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={handleSelectAll}
+                  className="h-11 px-4"
+                >
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Select All
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={handleSelectNone}
+                  className="h-11 px-4"
+                >
+                  <Shield className="w-4 h-4 mr-2" />
+                  Clear All
+                </Button>
+              </div>
+            </div>
+            
+            {/* Enhanced Selection Summary */}
+            <div className="flex items-center justify-between mt-4 pt-4 border-t">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 text-sm">
+                  <Shield className="w-4 h-4 text-muted-foreground" />
+                  <span className="font-medium">Total Permissions:</span>
+                  <Badge variant="secondary">{totalCount}</Badge>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  <span className="font-medium">Selected:</span>
+                  <Badge variant="default" className="bg-green-600">{selectedCount}</Badge>
+                </div>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {selectedCount > 0 ? (
+                  <span>{Math.round((selectedCount / totalCount) * 100)}% of permissions selected</span>
+                ) : (
+                  <span>Use Ctrl+A to select all, Ctrl+D to clear all</span>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Error State */}
@@ -310,85 +408,173 @@ export function RolePermissionManager({ role, onClose, onPermissionsUpdated }: R
             </div>
           )}
 
-          {/* Permissions List */}
-          <div className="flex-1 overflow-y-auto border rounded-lg">
+          {/* Enhanced Permissions List */}
+          <div className="flex-1 overflow-hidden">
             {isLoading ? (
-              <div className="p-8 text-center text-muted-foreground">
-                <div className="flex items-center justify-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Loading permissions...
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center">
+                  <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
+                  <p className="text-lg font-medium">Loading permissions...</p>
+                  <p className="text-sm text-muted-foreground">Please wait while we fetch the available permissions</p>
                 </div>
               </div>
             ) : filteredPermissions.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">
-                {searchTerm ? "No permissions found matching your search" : "No permissions available"}
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center">
+                  <Shield className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-lg font-medium">
+                    {searchTerm ? "No permissions found" : "No permissions available"}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {searchTerm 
+                      ? "Try adjusting your search terms" 
+                      : "There are no permissions configured for this system"
+                    }
+                  </p>
+                </div>
               </div>
             ) : (
-              <div className="divide-y">
-                {filteredPermissions.map((permission) => {
-                  const isSelected = selectedPermissions.includes(permission.id)
-                  const permissionMetadata = PERMISSION_METADATA.find(p => p.id === permission.name)
-                  
-                  return (
-                    <div key={permission.id} className="p-4 hover:bg-muted/50">
-                      <div className="flex items-start gap-3">
-                        <Checkbox
-                          id={permission.id}
-                          checked={isSelected}
-                          onCheckedChange={(checked) => handlePermissionToggle(permission.id, checked as boolean)}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <label
-                              htmlFor={permission.id}
-                              className="font-medium cursor-pointer"
-                            >
-                              {permissionMetadata?.label || permission.name}
-                            </label>
-                            {isSelected && (
-                              <CheckCircle className="w-4 h-4 text-green-600" />
-                            )}
+              <div className="h-full overflow-y-auto">
+                {/* Group permissions by category */}
+                {(() => {
+                  const groupedPermissions = filteredPermissions.reduce((groups, permission) => {
+                    const category = permission.category || 'other'
+                    if (!groups[category]) groups[category] = []
+                    groups[category].push(permission)
+                    return groups
+                  }, {} as Record<string, typeof filteredPermissions>)
+
+                  return Object.entries(groupedPermissions).map(([category, permissions]) => (
+                    <div key={category} className="mb-6">
+                      {/* Category Header */}
+                      <div className="sticky top-0 bg-background border-b pb-2 mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-primary/10 rounded-lg">
+                            <Shield className="w-4 h-4 text-primary" />
                           </div>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {permission.description || permissionMetadata?.description || 'No description'}
-                          </p>
-                          <div className="flex items-center gap-2 mt-2">
-                            <Badge variant="outline" className="text-xs">
-                              {permission.resource_server_identifier}
-                            </Badge>
-                            {permissionMetadata?.category && (
-                              <Badge variant="secondary" className="text-xs">
-                                {permissionMetadata.category}
-                              </Badge>
-                            )}
-                          </div>
+                          <h3 className="text-lg font-semibold capitalize">{category} Permissions</h3>
+                          <Badge variant="outline" className="text-xs">
+                            {permissions.length} permission{permissions.length !== 1 ? 's' : ''}
+                          </Badge>
                         </div>
                       </div>
+
+                      {/* Permissions Grid */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                        {permissions.map((permission) => {
+                          const isSelected = selectedPermissions.includes(permission.id)
+                          const permissionMetadata = PERMISSION_METADATA.find(p => p.id === permission.name)
+                          
+                          return (
+                            <div 
+                              key={permission.id} 
+                              className={`group relative p-4 rounded-lg border transition-all duration-200 cursor-pointer ${
+                                isSelected 
+                                  ? 'bg-primary/5 border-primary/20 shadow-sm' 
+                                  : 'bg-card hover:bg-muted/50 border-border'
+                              }`}
+                              onClick={() => handlePermissionToggle(permission.id, !isSelected)}
+                            >
+                              <div className="flex items-start gap-3">
+                                <Checkbox
+                                  id={permission.id}
+                                  checked={isSelected}
+                                  onCheckedChange={(checked) => handlePermissionToggle(permission.id, checked as boolean)}
+                                  className="mt-1"
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <label
+                                      htmlFor={permission.id}
+                                      className="font-medium cursor-pointer text-sm leading-tight"
+                                    >
+                                      {permissionMetadata?.label || permission.name}
+                                    </label>
+                                    {isSelected && (
+                                      <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
+                                    {permission.description || permissionMetadata?.description || 'No description available'}
+                                  </p>
+                                  <div className="flex items-center gap-2">
+                                    <Badge 
+                                      variant="outline" 
+                                      className="text-xs px-2 py-1"
+                                    >
+                                      {permission.resource_server_identifier}
+                                    </Badge>
+                                    {permissionMetadata?.category && (
+                                      <Badge 
+                                        variant="secondary" 
+                                        className="text-xs px-2 py-1"
+                                      >
+                                        {permissionMetadata.category}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* Selection indicator */}
+                              {isSelected && (
+                                <div className="absolute top-2 right-2">
+                                  <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
                     </div>
-                  )
-                })}
+                  ))
+                })()}
               </div>
             )}
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isSaving || isLoading}>
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleSave} 
-            disabled={isSaving || isLoading || error !== null}
-          >
-            {isSaving ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              'Save Permissions'
-            )}
-          </Button>
+        <DialogFooter className="bg-muted/30 px-6 py-4 -mx-6 -mb-6">
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4" />
+                <span>Role: <span className="font-medium text-foreground">{role.name}</span></span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-600" />
+                <span>{selectedCount} permission{selectedCount !== 1 ? 's' : ''} selected</span>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <Button 
+                variant="outline" 
+                onClick={onClose} 
+                disabled={isSaving || isLoading}
+                className="h-11 px-6"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSave} 
+                disabled={isSaving || isLoading || error !== null}
+                className="h-11 px-8"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving Changes...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Save Permissions
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
