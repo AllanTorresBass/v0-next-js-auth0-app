@@ -23,49 +23,14 @@ import { AlertCircle } from "lucide-react"
 
 interface ReportsClientProps {
   userRole?: UserRole
-  userName: string
+  userName?: string
 }
 
-const SAMPLE_REPORTS = [
-  {
-    id: 1,
-    title: "Monthly Sales Report",
-    description: "Comprehensive sales analysis for the current month",
-    type: "Sales",
-    date: "2025-01-15",
-    status: "completed",
-    icon: DollarSign,
-  },
-  {
-    id: 2,
-    title: "User Growth Analysis",
-    description: "User acquisition and retention metrics",
-    type: "Analytics",
-    date: "2025-01-14",
-    status: "completed",
-    icon: Users,
-  },
-  {
-    id: 3,
-    title: "Marketing Campaign Performance",
-    description: "ROI and engagement metrics for Q1 campaigns",
-    type: "Marketing",
-    date: "2025-01-13",
-    status: "completed",
-    icon: TrendingUp,
-  },
-  {
-    id: 4,
-    title: "Financial Summary Q1",
-    description: "Quarterly financial overview and projections",
-    type: "Finance",
-    date: "2025-01-12",
-    status: "completed",
-    icon: BarChart3,
-  },
-]
+// Reports will be fetched from a real API or database
+const REPORTS: any[] = []
 
 export function ReportsClient({ userRole, userName }: ReportsClientProps) {
+
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader />
@@ -181,7 +146,14 @@ export function ReportsClient({ userRole, userName }: ReportsClientProps) {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {SAMPLE_REPORTS.map((report) => {
+                {REPORTS.length === 0 ? (
+                  <div className="text-center py-12">
+                    <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">No Reports Available</h3>
+                    <p className="text-muted-foreground">Reports will appear here when they are generated.</p>
+                  </div>
+                ) : (
+                  REPORTS.map((report) => {
                   const Icon = report.icon
                   return (
                     <div
@@ -209,7 +181,8 @@ export function ReportsClient({ userRole, userName }: ReportsClientProps) {
                       </Button>
                     </div>
                   )
-                })}
+                })
+                )}
               </div>
             </CardContent>
           </Card>

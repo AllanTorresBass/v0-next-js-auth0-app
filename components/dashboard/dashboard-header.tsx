@@ -1,6 +1,6 @@
 "use client"
 
-import { useUser } from "@/lib/mock-auth/mock-auth-provider"
+// User switcher functionality removed - using Auth0 sessions only
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -11,16 +11,22 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { LogOut, User, LayoutDashboard, Users, FileText, Settings, Menu } from "lucide-react"
+import { LogOut, User, LayoutDashboard, Users, FileText, Settings, Menu, Shield } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { PermissionGate } from "@/components/rbac/permission-gate"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useState } from "react"
 
-export function DashboardHeader() {
-  const { user } = useUser()
+interface DashboardHeaderProps {
+  user?: {
+    name?: string
+    email?: string
+    picture?: string
+  }
+}
+
+export function DashboardHeader({ user }: DashboardHeaderProps) {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
@@ -29,25 +35,26 @@ export function DashboardHeader() {
       href: "/dashboard",
       label: "Dashboard",
       icon: LayoutDashboard,
-      permission: null, // Always visible
     },
     {
       href: "/users",
       label: "Users",
       icon: Users,
-      permission: "users:read" as const,
+    },
+    {
+      href: "/roles",
+      label: "Roles",
+      icon: Shield,
     },
     {
       href: "/reports",
       label: "Reports",
       icon: FileText,
-      permission: "reports:view" as const,
     },
     {
       href: "/settings",
       label: "Settings",
       icon: Settings,
-      permission: "settings:manage" as const,
     },
   ]
 
@@ -55,7 +62,7 @@ export function DashboardHeader() {
     const isActive = pathname === item.href
     const Icon = item.icon
 
-    const linkContent = (
+    return (
       <Button
         variant={isActive ? "secondary" : "ghost"}
         className={cn(
@@ -71,12 +78,6 @@ export function DashboardHeader() {
         </Link>
       </Button>
     )
-
-    if (!item.permission) {
-      return linkContent
-    }
-
-    return <PermissionGate permission={item.permission}>{linkContent}</PermissionGate>
   }
 
   return (

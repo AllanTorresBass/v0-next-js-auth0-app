@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { UserPlus, Search, ArrowLeft } from "lucide-react"
 import { UserTable } from "@/components/users/user-table"
 import { UserDialog } from "@/components/users/user-dialog"
-import { PermissionGate } from "@/components/rbac/permission-gate"
+// User switcher functionality removed - using Auth0 sessions only
 import { useUsers } from "@/hooks/use-users"
 import { SetupStatusBanner } from "@/components/auth0/setup-status-banner"
 import Link from "next/link"
@@ -41,12 +41,10 @@ export function UserManagementClient() {
                     Back to Dashboard
                   </Link>
                 </Button>
-                <PermissionGate permission="users:create">
-                  <Button onClick={() => setIsCreateDialogOpen(true)}>
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    Add User
-                  </Button>
-                </PermissionGate>
+                <Button onClick={() => setIsCreateDialogOpen(true)}>
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Add User
+                </Button>
               </div>
             </div>
           </CardHeader>
@@ -65,13 +63,7 @@ export function UserManagementClient() {
               </div>
             </div>
 
-            {isLoading ? (
-              <div className="text-center py-8 text-muted-foreground">Loading users...</div>
-            ) : filteredUsers.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">No users found</div>
-            ) : (
-              <UserTable users={filteredUsers} />
-            )}
+            <UserTable searchQuery={searchQuery} />
           </CardContent>
         </Card>
       </div>

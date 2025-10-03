@@ -3,9 +3,9 @@ import type { Metadata } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
-import { MockAuthProvider } from "@/lib/mock-auth/mock-auth-provider"
+import { Auth0Provider as Auth0SDKProvider } from "@auth0/nextjs-auth0"
+import { Auth0Provider } from "@/lib/auth0-provider"
 import { QueryProvider } from "@/components/providers/query-provider"
-import { UserSwitcher } from "@/components/dev/user-switcher"
 import "./globals.css"
 import { Suspense } from "react"
 
@@ -67,14 +67,13 @@ export default function RootLayout({
       </head>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <Suspense fallback={null}>
-          <MockAuthProvider>
-            <QueryProvider>
-              <div className="fixed bottom-4 left-4 z-50 w-[280px]">
-                <UserSwitcher />
-              </div>
-              {children}
-            </QueryProvider>
-          </MockAuthProvider>
+          <Auth0SDKProvider>
+            <Auth0Provider>
+              <QueryProvider>
+                {children}
+              </QueryProvider>
+            </Auth0Provider>
+          </Auth0SDKProvider>
         </Suspense>
         <Analytics />
       </body>

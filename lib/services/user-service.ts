@@ -1,7 +1,17 @@
-import type { User } from "@/lib/data/mock-users"
+import type { User, CreateUserData, UpdateUserData } from "@/lib/types/user"
+// User switcher functionality removed - using Auth0 sessions only
+
+// Helper function to create headers
+function createHeaders(): HeadersInit {
+  return {
+    'Content-Type': 'application/json',
+  }
+}
 
 export async function fetchUsers(): Promise<User[]> {
-  const response = await fetch("/api/users")
+  const response = await fetch("/api/users", {
+    headers: createHeaders()
+  })
   if (!response.ok) {
     throw new Error("Failed to fetch users")
   }
@@ -10,7 +20,9 @@ export async function fetchUsers(): Promise<User[]> {
 }
 
 export async function fetchUserById(id: string): Promise<User> {
-  const response = await fetch(`/api/users/${encodeURIComponent(id)}`)
+  const response = await fetch(`/api/users/${encodeURIComponent(id)}`, {
+    headers: createHeaders()
+  })
   if (!response.ok) {
     throw new Error("Failed to fetch user")
   }
@@ -18,11 +30,14 @@ export async function fetchUserById(id: string): Promise<User> {
   return data.user
 }
 
-export async function createUser(userData: Omit<User, "id" | "createdAt"> & { password: string }): Promise<User> {
+export async function createUser(userData: CreateUserData): Promise<User> {
   const response = await fetch("/api/users", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(userData),
+    headers: createHeaders(),
+    body: JSON.stringify({
+      action: 'create',
+      ...userData
+    }),
   })
   if (!response.ok) {
     const error = await response.json()
@@ -32,10 +47,10 @@ export async function createUser(userData: Omit<User, "id" | "createdAt"> & { pa
   return data.user
 }
 
-export async function updateUser(id: string, userData: Partial<User> & { password?: string }): Promise<User> {
+export async function updateUser(id: string, userData: UpdateUserData): Promise<User> {
   const response = await fetch(`/api/users/${encodeURIComponent(id)}`, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: createHeaders(),
     body: JSON.stringify(userData),
   })
   if (!response.ok) {
@@ -49,6 +64,7 @@ export async function updateUser(id: string, userData: Partial<User> & { passwor
 export async function deleteUser(id: string): Promise<void> {
   const response = await fetch(`/api/users/${encodeURIComponent(id)}`, {
     method: "DELETE",
+    headers: createHeaders()
   })
   if (!response.ok) {
     const error = await response.json()

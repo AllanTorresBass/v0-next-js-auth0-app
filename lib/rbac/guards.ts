@@ -1,14 +1,13 @@
-import { getSession } from "@/lib/mock-auth/mock-session"
+import { auth0 } from "@/lib/auth0"
 import { redirect } from "next/navigation"
 import type { Permission, UserRole } from "./permissions"
 import { hasPermission, hasAnyPermission, hasAllPermissions } from "./permissions"
 
+
 export async function requireAuth() {
-  const session = await getSession()
-  if (!session?.user) {
-    redirect("/api/auth/login")
-  }
-  return session
+  // For now, always redirect to user switcher in development
+  // This bypasses the traditional Auth0 login process
+  redirect("/auth/login")
 }
 
 export async function requirePermission(permission: Permission) {

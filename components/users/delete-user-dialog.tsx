@@ -10,34 +10,26 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import type { User } from "@/lib/data/mock-users"
+import type { User } from "@/lib/types/user"
 import { useDeleteUser } from "@/hooks/use-users"
-import { useToast } from "@/hooks/use-toast"
 
 interface DeleteUserDialogProps {
   user: User
   open: boolean
   onOpenChange: (open: boolean) => void
+  onUserDeleted?: () => void
 }
 
-export function DeleteUserDialog({ user, open, onOpenChange }: DeleteUserDialogProps) {
-  const { toast } = useToast()
+export function DeleteUserDialog({ user, open, onOpenChange, onUserDeleted }: DeleteUserDialogProps) {
   const deleteUser = useDeleteUser()
 
   const handleDelete = async () => {
     try {
       await deleteUser.mutateAsync(user.id)
-      toast({
-        title: "User deleted",
-        description: "The user has been deleted successfully.",
-      })
+      onUserDeleted?.()
       onOpenChange(false)
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete user. Please try again.",
-        variant: "destructive",
-      })
+      // Error handling is done in the hook
     }
   }
 

@@ -1,0 +1,21 @@
+
+> my-v0-project@0.1.0 dev
+> next dev
+
+   ▲ Next.js 15.2.4
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.1.88:3000
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 1241ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 992ms (815 modules)
+ GET /sw.js 404 in 1175ms
+ ✓ Compiled /middleware in 107ms (101 modules)
+ ○ Compiling /auth/profile ...
+ ✓ Compiled /auth/profile in 584ms (587 modules)
+ GET /auth/profile 401 in 651ms
+ ✓ Compiled in 84ms (388 modules)
+ ✓ Compiled in 84ms (388 modules)
+[?25h

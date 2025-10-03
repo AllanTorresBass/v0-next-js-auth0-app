@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { fetchUsers, fetchUserById, createUser, updateUser, deleteUser } from "@/lib/services/user-service"
-import type { User } from "@/lib/data/mock-users"
+import type { User, CreateUserData, UpdateUserData } from "@/lib/types/user"
 import { useToast } from "@/hooks/use-toast"
 
 export function useUsers() {
@@ -48,7 +48,7 @@ export function useUpdateUser() {
   const { toast } = useToast()
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<User> }) => updateUser(id, data),
+    mutationFn: ({ id, data }: { id: string; data: UpdateUserData }) => updateUser(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["users"] })
       queryClient.invalidateQueries({ queryKey: ["users", variables.id] })
@@ -73,8 +73,12 @@ export function useDeleteUser() {
 
   return useMutation({
     mutationFn: deleteUser,
-    onSuccess: () => {
+    onSuccess: (_, deletedUserId) => {
+      // Invalidate all user-related queries
       queryClient.invalidateQueries({ queryKey: ["users"] })
+      queryClient.invalidateQueries({ queryKey: ["users", deletedUserId] })
+      queryClient.removeQueries({ queryKey: ["users", deletedUserId] })
+      
       toast({
         title: "Success",
         description: "User deleted successfully",

@@ -112,11 +112,17 @@ export function hasPermission(
   role: UserRole | undefined,
   permission: Permission,
   customPermissions?: Permission[],
+  auth0Permissions?: Array<{ name: string }>,
 ): boolean {
   if (!role) return false
 
-  // Check custom permissions first (they override role permissions)
-  if (customPermissions) {
+  // Check Auth0 permissions first (most authoritative) - only if they exist and are not empty
+  if (auth0Permissions && auth0Permissions.length > 0) {
+    return auth0Permissions.some(p => p.name === permission)
+  }
+
+  // Check custom permissions (they override role permissions) - only if they exist and are not empty
+  if (customPermissions && customPermissions.length > 0) {
     return customPermissions.includes(permission)
   }
 
@@ -128,18 +134,20 @@ export function hasAnyPermission(
   role: UserRole | undefined,
   permissions: Permission[],
   customPermissions?: Permission[],
+  auth0Permissions?: Array<{ name: string }>,
 ): boolean {
   if (!role) return false
-  return permissions.some((permission) => hasPermission(role, permission, customPermissions))
+  return permissions.some((permission) => hasPermission(role, permission, customPermissions, auth0Permissions))
 }
 
 export function hasAllPermissions(
   role: UserRole | undefined,
   permissions: Permission[],
   customPermissions?: Permission[],
+  auth0Permissions?: Array<{ name: string }>,
 ): boolean {
   if (!role) return false
-  return permissions.every((permission) => hasPermission(role, permission, customPermissions))
+  return permissions.every((permission) => hasPermission(role, permission, customPermissions, auth0Permissions))
 }
 
 export function getUserPermissions(role: UserRole, customPermissions?: Permission[]): Permission[] {
@@ -151,4 +159,16 @@ export function getUserPermissions(role: UserRole, customPermissions?: Permissio
 
 export function getPermissionsByCategory(category: string): PermissionMetadata[] {
   return PERMISSION_METADATA.filter((p) => p.category === category)
+}
+
+// Helper function to get permissions from Auth0 format
+export function getAuth0Permissions(auth0Permissions?: Array<{ name: string }>): Permission[] {
+  if (!auth0Permissions) return []
+  return auth0Permissions.map(p => p.name as Permission).filter(Boolean)
+}
+
+// Helper function to check if user has any Auth0 role
+export function hasAuth0Role(auth0Roles?: Array<{ name: string }>, roleName?: string): boolean {
+  if (!auth0Roles || !roleName) return false
+  return auth0Roles.some(role => role.name === roleName)
 }

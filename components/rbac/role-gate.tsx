@@ -2,8 +2,9 @@
 
 import type React from "react"
 
-import { useUser } from "@/lib/mock-auth/mock-auth-provider"
+import { useAuth0 } from "@/lib/auth0-provider"
 import type { UserRole } from "@/lib/rbac/permissions"
+import { hasAuth0Role } from "@/lib/rbac/permissions"
 
 interface RoleGateProps {
   allowedRoles: UserRole[]
@@ -12,10 +13,17 @@ interface RoleGateProps {
 }
 
 export function RoleGate({ allowedRoles, children, fallback = null }: RoleGateProps) {
-  const { user } = useUser()
+  const { user } = useAuth0()
   const userRole = user?.role as UserRole | undefined
+  const auth0Roles = user?.roles
 
-  if (!userRole || !allowedRoles.includes(userRole)) {
+  // Check Auth0 roles first
+  const hasAuth0RoleMatch = allowedRoles.some(role => hasAuth0Role(auth0Roles, role))
+  
+  // Fall back to legacy role check
+  const hasLegacyRoleMatch = userRole && allowedRoles.includes(userRole)
+
+  if (!hasAuth0RoleMatch && !hasLegacyRoleMatch) {
     return <>{fallback}</>
   }
 

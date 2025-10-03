@@ -15,10 +15,11 @@ import { AlertCircle } from "lucide-react"
 
 interface SettingsClientProps {
   userRole?: UserRole
-  userName: string
+  userName?: string
 }
 
 export function SettingsClient({ userRole, userName }: SettingsClientProps) {
+
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader />
@@ -80,7 +81,7 @@ export function SettingsClient({ userRole, userName }: SettingsClientProps) {
                 <Separator />
                 <div className="space-y-2">
                   <Label htmlFor="session-duration">Session Duration (minutes)</Label>
-                  <Input id="session-duration" type="number" defaultValue="30" className="max-w-[200px]" />
+                  <Input id="session-duration" type="number" placeholder="30" className="max-w-[200px]" />
                 </div>
               </CardContent>
             </Card>
@@ -147,7 +148,7 @@ export function SettingsClient({ userRole, userName }: SettingsClientProps) {
                 <Separator />
                 <div className="space-y-2">
                   <Label htmlFor="default-role">Default User Role</Label>
-                  <Input id="default-role" defaultValue="client" className="max-w-[200px]" />
+                  <Input id="default-role" placeholder="client" className="max-w-[200px]" />
                 </div>
               </CardContent>
             </Card>
@@ -163,12 +164,12 @@ export function SettingsClient({ userRole, userName }: SettingsClientProps) {
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="api-url">API Base URL</Label>
-                  <Input id="api-url" defaultValue="https://api.example.com" />
+                  <Input id="api-url" placeholder="Enter API base URL" />
                 </div>
                 <Separator />
                 <div className="space-y-2">
                   <Label htmlFor="backup-frequency">Backup Frequency</Label>
-                  <Input id="backup-frequency" defaultValue="Daily" className="max-w-[200px]" />
+                  <Input id="backup-frequency" placeholder="Daily" className="max-w-[200px]" />
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
@@ -201,8 +202,8 @@ export function SettingsClient({ userRole, userName }: SettingsClientProps) {
                 <div className="space-y-2">
                   <Label htmlFor="brand-color">Brand Color</Label>
                   <div className="flex gap-2">
-                    <Input id="brand-color" type="color" defaultValue="#000000" className="w-20 h-10" />
-                    <Input defaultValue="#000000" className="max-w-[150px]" />
+                    <Input id="brand-color" type="color" className="w-20 h-10" />
+                    <Input placeholder="#000000" className="max-w-[150px]" />
                   </div>
                 </div>
               </CardContent>

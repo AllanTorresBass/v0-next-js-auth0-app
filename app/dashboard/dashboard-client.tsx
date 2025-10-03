@@ -7,20 +7,26 @@ import { Users, TrendingUp, FileText, Activity, ShoppingCart, Target } from "luc
 import type { UserRole } from "@/lib/rbac/permissions"
 import { RoleGate } from "@/components/rbac/role-gate"
 import { PermissionGate } from "@/components/rbac/permission-gate"
+// User switcher functionality removed - using Auth0 sessions only
+import { Button } from "@/components/ui/button"
 
 interface DashboardClientProps {
   userRole?: UserRole
-  userName: string
+  userName?: string
 }
 
 export function DashboardClient({ userRole, userName }: DashboardClientProps) {
+  // Using Auth0 sessions - user authentication is handled by middleware
+
+  // Dashboard loads immediately with Auth0 sessions
+
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader />
 
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-balance">Welcome back, {userName}</h1>
+          <h1 className="text-3xl font-bold text-balance">Welcome back, {userName || "User"}</h1>
           <p className="text-muted-foreground mt-1">
             {userRole ? `Role: ${userRole.replace("_", " ").toUpperCase()}` : ""}
           </p>

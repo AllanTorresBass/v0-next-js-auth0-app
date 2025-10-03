@@ -142,37 +142,15 @@ Each role has specific permissions defined in `lib/rbac/permissions.ts`:
 │   ├── auth0-management.ts    # Auth0 Management API client
 │   ├── rbac/                  # RBAC permissions and guards
 │   ├── services/              # API service layer
-│   └── mock-auth/             # Mock auth for preview (development only)
 └── hooks/
     └── use-users.ts           # TanStack Query hooks for user operations
 \`\`\`
 
 ## Important Notes
 
-### Mock Auth vs Real Auth0
+### Authentication
 
-- **Development (v0 preview)**: Uses mock authentication for preview purposes
-- **Production**: Uses real Auth0 authentication
-
-To switch from mock to real Auth0:
-
-1. Replace imports in `app/layout.tsx`:
-   \`\`\`tsx
-   // Change from:
-   import { MockAuthProvider } from "@/lib/mock-auth/mock-auth-provider"
-   
-   // To:
-   import { UserProvider } from "@auth0/nextjs-auth0/client"
-   \`\`\`
-
-2. Update API routes to use real Auth0 session:
-   \`\`\`tsx
-   // Change from:
-   import { getSession } from "@/lib/mock-auth/mock-session"
-   
-   // To:
-   import { getSession } from "@auth0/nextjs-auth0"
-   \`\`\`
+This application uses Auth0 for authentication and user management. All user data is fetched from Auth0's Management API.
 
 ### Database Connection Name
 

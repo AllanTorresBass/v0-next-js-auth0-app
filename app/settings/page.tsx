@@ -1,9 +1,7 @@
-import { requireAuth, getUserRole } from "@/lib/rbac/guards"
 import { SettingsClient } from "./settings-client"
 
 export default async function SettingsPage() {
-  const session = await requireAuth()
-  const userRole = getUserRole(session)
-
-  return <SettingsClient userRole={userRole} userName={session.user.name} />
+  // For now, redirect to user switcher since we're using the user switching approach
+  // This will be handled by the client-side user switcher context
+  return <SettingsClient userRole={undefined} userName={undefined} />
 }
