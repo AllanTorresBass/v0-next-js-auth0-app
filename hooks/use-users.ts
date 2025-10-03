@@ -1,95 +1,159 @@
-"use client"
+/**
+ * Custom hooks for user management
+ */
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { fetchUsers, fetchUserById, createUser, updateUser, deleteUser } from "@/lib/services/user-service"
-import type { User, CreateUserData, UpdateUserData } from "@/lib/types/user"
-import { useToast } from "@/hooks/use-toast"
+import { useApi, usePaginatedApi, useMutation, useDebouncedSearch } from './use-api'
+import { User, CreateUserRequest, UpdateUserRequest, UserQuery } from '@/lib/types'
 
-export function useUsers() {
-  return useQuery({
-    queryKey: ["users"],
-    queryFn: fetchUsers,
-  })
+// ===== USER LIST HOOK =====
+
+export function useUsers(query?: UserQuery) {
+  return usePaginatedApi<User>(
+    async (page, limit) => {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+        ...(query?.search && { search: query.search }),
+        ...(query?.status && { status: query.status }),
+        ...(query?.role && { role: query.role }),
+        ...(query?.sortBy && { sortBy: query.sortBy }),
+        ...(query?.sortOrder && { sortOrder: query.sortOrder }),
+        ...(query?.includeInactive && { includeInactive: query.includeInactive.toString() })
+      })
+
+      const response = await fetch(`/api/v2/users?${params}`)
+      return await response.json()
+    },
+    query?.page || 1,
+    query?.limit || 10
+  )
 }
+
+// ===== USER BY ID HOOK =====
 
 export function useUser(id: string) {
-  return useQuery({
-    queryKey: ["users", id],
-    queryFn: () => fetchUserById(id),
-    enabled: !!id,
-  })
+  return useApi<User>(
+    async () => {
+      const response = await fetch(`/api/v2/users/${encodeURIComponent(id)}`)
+      return await response.json()
+    },
+    [id]
+  )
 }
 
-export function useCreateUser() {
-  const queryClient = useQueryClient()
-  const { toast } = useToast()
+// ===== USER STATS HOOK =====
 
-  return useMutation({
-    mutationFn: createUser,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] })
-      toast({
-        title: "Success",
-        description: "User created successfully",
+export function useUserStats() {
+  return useApi<{
+    total: number
+    active: number
+    inactive: number
+    byRole: Record<string, number>
+  }>(
+    async () => {
+      const response = await fetch('/api/v2/users/stats')
+      return await response.json()
+    }
+  )
+}
+
+// ===== USER MUTATIONS =====
+
+export function useCreateUser() {
+  return useMutation<User, CreateUserRequest>(
+    async (userData) => {
+      const response = await fetch('/api/v2/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData)
       })
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create user",
-        variant: "destructive",
-      })
-    },
-  })
+      return await response.json()
+    }
+  )
 }
 
 export function useUpdateUser() {
-  const queryClient = useQueryClient()
-  const { toast } = useToast()
-
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateUserData }) => updateUser(id, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["users"] })
-      queryClient.invalidateQueries({ queryKey: ["users", variables.id] })
-      toast({
-        title: "Success",
-        description: "User updated successfully",
+  return useMutation<User, { id: string; data: UpdateUserRequest }>(
+    async ({ id, data }) => {
+      const response = await fetch(`/api/v2/users/${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
       })
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update user",
-        variant: "destructive",
-      })
-    },
-  })
+      return await response.json()
+    }
+  )
 }
 
 export function useDeleteUser() {
-  const queryClient = useQueryClient()
-  const { toast } = useToast()
+  return useMutation<void, string>(
+    async (id) => {
+      const response = await fetch(`/api/v2/users/${encodeURIComponent(id)}`, {
+        method: 'DELETE'
+      })
+      return await response.json()
+    }
+  )
+}
 
-  return useMutation({
-    mutationFn: deleteUser,
-    onSuccess: (_, deletedUserId) => {
-      // Invalidate all user-related queries
-      queryClient.invalidateQueries({ queryKey: ["users"] })
-      queryClient.invalidateQueries({ queryKey: ["users", deletedUserId] })
-      queryClient.removeQueries({ queryKey: ["users", deletedUserId] })
-      
-      toast({
-        title: "Success",
-        description: "User deleted successfully",
+// ===== BULK OPERATIONS =====
+
+export function useBulkCreateUsers() {
+  return useMutation<User[], CreateUserRequest[]>(
+    async (users) => {
+      const response = await fetch('/api/v2/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'bulk-create',
+          data: { users }
+        })
       })
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete user",
-        variant: "destructive",
+      return await response.json()
+    }
+  )
+}
+
+export function useBulkUpdateUsers() {
+  return useMutation<User[], { userIds: string[]; data: UpdateUserRequest }>(
+    async ({ userIds, data }) => {
+      const response = await fetch('/api/v2/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'bulk-update',
+          userIds,
+          data
+        })
       })
-    },
-  })
+      return await response.json()
+    }
+  )
+}
+
+export function useBulkDeleteUsers() {
+  return useMutation<void, string[]>(
+    async (userIds) => {
+      const response = await fetch('/api/v2/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'bulk-delete',
+          userIds
+        })
+      })
+      return await response.json()
+    }
+  )
+}
+
+// ===== USER SEARCH =====
+
+export function useUserSearch() {
+  return useDebouncedSearch<User>(
+    async (query) => {
+      const response = await fetch(`/api/v2/users/search?q=${encodeURIComponent(query)}`)
+      return await response.json()
+    }
+  )
 }
