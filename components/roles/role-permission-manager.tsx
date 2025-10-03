@@ -14,7 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
-import { Search, Shield, CheckCircle } from "lucide-react"
+import { Search, Shield, CheckCircle, Loader2 } from "lucide-react"
 import type { Auth0Role, Auth0Permission } from "@/lib/auth0-management"
 import { PERMISSION_METADATA } from "@/lib/rbac/permissions"
 
@@ -31,18 +31,26 @@ export function RolePermissionManager({ role, onClose, onPermissionsUpdated }: R
   const [searchTerm, setSearchTerm] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const { toast } = useToast()
 
   useEffect(() => {
     fetchPermissions()
-  }, [])
+  }, [role.id])
 
+  // Update selected permissions when role permissions are loaded
   useEffect(() => {
-    setSelectedPermissions(rolePermissions.map(p => p.id))
+    if (rolePermissions.length > 0) {
+      const currentPermissionIds = rolePermissions.map(p => p.id)
+      setSelectedPermissions(currentPermissionIds)
+      console.log('[RolePermissionManager] Loaded role permissions:', currentPermissionIds)
+    }
   }, [rolePermissions])
 
   const fetchPermissions = async () => {
     try {
+      setIsLoading(true)
+      setError(null)
       console.log('[RolePermissionManager] Fetching permissions for role:', role.id)
       
       const headers: HeadersInit = {
@@ -71,23 +79,31 @@ export function RolePermissionManager({ role, onClose, onPermissionsUpdated }: R
       console.log('[RolePermissionManager] Permissions response status:', permissionsResponse.status)
       console.log('[RolePermissionManager] Role permissions response status:', rolePermissionsResponse.status)
 
+      // Handle available permissions
       if (permissionsResponse.ok) {
         const permissionsData = await permissionsResponse.json()
         console.log('[RolePermissionManager] Available permissions loaded:', permissionsData.permissions?.length || 0)
         setAvailablePermissions(permissionsData.permissions || [])
       } else {
-        console.error('[RolePermissionManager] Failed to fetch permissions:', permissionsResponse.statusText)
+        const errorText = await permissionsResponse.text()
+        console.error('[RolePermissionManager] Failed to fetch permissions:', permissionsResponse.status, errorText)
+        setError(`Failed to load available permissions: ${permissionsResponse.statusText}`)
       }
 
+      // Handle role permissions
       if (rolePermissionsResponse.ok) {
         const rolePermissionsData = await rolePermissionsResponse.json()
         console.log('[RolePermissionManager] Role permissions loaded:', rolePermissionsData.permissions?.length || 0)
         setRolePermissions(rolePermissionsData.permissions || [])
       } else {
-        console.error('[RolePermissionManager] Failed to fetch role permissions:', rolePermissionsResponse.statusText)
+        const errorText = await rolePermissionsResponse.text()
+        console.error('[RolePermissionManager] Failed to fetch role permissions:', rolePermissionsResponse.status, errorText)
+        // Don't set error for role permissions as it might be empty initially
+        setRolePermissions([])
       }
     } catch (error) {
       console.error("Failed to fetch permissions:", error)
+      setError("Failed to fetch permissions. Please try again.")
       toast({
         title: "Error",
         description: "Failed to fetch permissions",
@@ -275,15 +291,37 @@ export function RolePermissionManager({ role, onClose, onPermissionsUpdated }: R
             )}
           </div>
 
+          {/* Error State */}
+          {error && (
+            <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+              <div className="flex items-center gap-2 text-destructive">
+                <Shield className="w-4 h-4" />
+                <span className="font-medium">Error loading permissions</span>
+              </div>
+              <p className="text-sm text-destructive/80 mt-1">{error}</p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={fetchPermissions}
+                className="mt-2"
+              >
+                Try Again
+              </Button>
+            </div>
+          )}
+
           {/* Permissions List */}
           <div className="flex-1 overflow-y-auto border rounded-lg">
             {isLoading ? (
               <div className="p-8 text-center text-muted-foreground">
-                Loading permissions...
+                <div className="flex items-center justify-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Loading permissions...
+                </div>
               </div>
             ) : filteredPermissions.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
-                No permissions found
+                {searchTerm ? "No permissions found matching your search" : "No permissions available"}
               </div>
             ) : (
               <div className="divide-y">
@@ -335,11 +373,21 @@ export function RolePermissionManager({ role, onClose, onPermissionsUpdated }: R
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isSaving}>
+          <Button variant="outline" onClick={onClose} disabled={isSaving || isLoading}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving ? 'Saving...' : 'Save Permissions'}
+          <Button 
+            onClick={handleSave} 
+            disabled={isSaving || isLoading || error !== null}
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              'Save Permissions'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
