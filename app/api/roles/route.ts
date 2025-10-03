@@ -36,12 +36,9 @@ export async function POST(request: Request) {
     if (permissions && Array.isArray(permissions) && permissions.length > 0) {
       console.log('[API] Role creation - Assigning permissions:', permissions)
       
-      // All permissions are application permissions (they have colons)
-      // Store application permissions
-      for (const permissionId of permissions) {
-        console.log('[API] Assigning permission to role:', permissionId)
-        assignRolePermission(role.id, permissionId)
-      }
+      // All permissions are now Auth0 permissions (using the custom API)
+      console.log('[API] Assigning Auth0 permissions to role:', permissions)
+      await assignRolePermissions(role.id, permissions)
       
       console.log('[API] Successfully assigned permissions to new role')
     }
