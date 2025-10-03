@@ -8,8 +8,16 @@ export async function GET(request: Request) {
   try {
     // Authentication removed for permission listing - using Auth0 sessions only
 
-    // Get Auth0 permissions from resource servers
-    const auth0Permissions = await getAllPermissions()
+    let auth0Permissions: any[] = []
+    
+    try {
+      // Get Auth0 permissions from resource servers
+      auth0Permissions = await getAllPermissions()
+    } catch (error: any) {
+      console.warn("Failed to fetch Auth0 permissions:", error.message)
+      // Continue with empty array if Auth0 permissions can't be fetched
+      // This allows the app to work even if the Auth0 Custom API doesn't have permissions yet
+    }
     
     // Convert our application permissions to Auth0 format for consistency
     const appPermissions = PERMISSION_METADATA.map(permission => ({

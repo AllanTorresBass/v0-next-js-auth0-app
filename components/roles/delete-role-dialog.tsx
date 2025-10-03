@@ -38,8 +38,15 @@ export function DeleteRoleDialog({ role, open, onOpenChange, onRoleDeleted }: De
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to delete role')
+        let errorMessage = 'Failed to delete role'
+        try {
+          const error = await response.json()
+          errorMessage = error.error || errorMessage
+        } catch (parseError) {
+          // If response is not JSON, use status text
+          errorMessage = response.statusText || errorMessage
+        }
+        throw new Error(errorMessage)
       }
 
       toast({

@@ -369,6 +369,7 @@ export async function assignRolePermissions(roleId: string, permissionIds: strin
   const token = await getManagementToken()
   const domain = process.env.AUTH0_ISSUER_BASE_URL!.replace("https://", "")
 
+  // Try to assign permissions directly - Auth0 will return an error if they don't exist
   const response = await fetch(`https://${domain}/api/v2/roles/${encodeURIComponent(roleId)}/permissions`, {
     method: "POST",
     headers: {
@@ -384,7 +385,20 @@ export async function assignRolePermissions(roleId: string, permissionIds: strin
   })
 
   if (!response.ok) {
-    throw new Error(`Failed to assign permissions to role: ${response.statusText}`)
+    const error = await response.json().catch(() => ({}))
+    
+    // If the error is about permissions not existing, log a warning but don't fail
+    if (error.message && (
+      error.message.includes("not found") || 
+      error.message.includes("does not exist") ||
+      error.message.includes("Permission") && error.message.includes("not found")
+    )) {
+      console.warn(`Some permissions don't exist in Auth0 for role ${roleId}:`, permissionIds)
+      console.warn(`Auth0 error:`, error.message)
+      return // Skip assignment gracefully
+    }
+    
+    throw new Error(error.message || `Failed to assign permissions to role: ${response.statusText}`)
   }
 }
 
