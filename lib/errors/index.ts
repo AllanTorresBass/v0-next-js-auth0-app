@@ -77,6 +77,12 @@ export class ConflictError extends AppError {
   }
 }
 
+export class RateLimitError extends AppError {
+  constructor(message: string = 'Rate limit exceeded. Please try again later.', retryAfter?: number, path?: string) {
+    super(message, ErrorCode.RATE_LIMIT_ERROR, 429, { retryAfter }, path)
+  }
+}
+
 export class Auth0Error extends AppError {
   constructor(message: string, auth0Error?: any, path?: string) {
     super(message, ErrorCode.AUTH0_ERROR, 500, { auth0Error }, path)
@@ -98,6 +104,19 @@ export function isAppError(error: any): error is AppError {
 export function handleError(error: any, path?: string): AppError {
   if (isAppError(error)) {
     return error
+  }
+
+  // Handle rate limit errors
+  if (error.message?.includes('Too Many Requests') || 
+      error.message?.includes('rate limit') || 
+      error.message?.includes('429') ||
+      error.status === 429) {
+    const retryAfter = error.retryAfter || error.details?.retryAfter
+    return new RateLimitError(
+      'The system is currently experiencing high load. Please wait a moment and try again.',
+      retryAfter,
+      path
+    )
   }
 
   // Handle Auth0 errors

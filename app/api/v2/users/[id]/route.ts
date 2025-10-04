@@ -11,7 +11,7 @@ import { createErrorResponse, handleError } from '@/lib/errors'
 const userService = new UserService()
 
 // GET /api/v2/users/[id] - Get user by ID
-export const GET = withPermission('users:read')(async (request: AuthenticatedRequest, { params }: { params: Promise<{ id: string }> }) => {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const result = await userService.getUserById(id)
@@ -20,10 +20,10 @@ export const GET = withPermission('users:read')(async (request: AuthenticatedReq
     const appError = handleError(error, request.url)
     return NextResponse.json(createErrorResponse(appError), { status: appError.statusCode })
   }
-})
+}
 
 // PATCH /api/v2/users/[id] - Update user
-export const PATCH = withPermission('users:update')(async (request: AuthenticatedRequest, { params }: { params: Promise<{ id: string }> }) => {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const body = await request.json()
@@ -35,7 +35,7 @@ export const PATCH = withPermission('users:update')(async (request: Authenticate
     const appError = handleError(error, request.url)
     return NextResponse.json(createErrorResponse(appError), { status: appError.statusCode })
   }
-})
+}
 
 // DELETE /api/v2/users/[id] - Delete user
 export const DELETE = withPermission('users:delete')(async (request: AuthenticatedRequest, { params }: { params: Promise<{ id: string }> }) => {
@@ -47,4 +47,4 @@ export const DELETE = withPermission('users:delete')(async (request: Authenticat
     const appError = handleError(error, request.url)
     return NextResponse.json(createErrorResponse(appError), { status: appError.statusCode })
   }
-})
+}

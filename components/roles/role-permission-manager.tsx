@@ -413,73 +413,49 @@ export function RolePermissionManager({ role, onClose, onPermissionsUpdated }: R
             ) : (
               <div className="h-full overflow-y-auto">
                 {/* Group permissions by category */}
-                {(() => {
-                  const groupedPermissions = filteredPermissions.reduce((groups, permission) => {
-                    const category = permission.category || 'other'
-                    if (!groups[category]) groups[category] = []
-                    groups[category].push(permission)
-                    return groups
-                  }, {} as Record<string, typeof filteredPermissions>)
+                <>
+                  {(() => {
+                    const groupedPermissions = filteredPermissions.reduce((groups, permission) => {
+                      const category = permission.category || 'other'
+                      if (!groups[category]) groups[category] = []
+                      groups[category].push(permission)
+                      return groups
+                    }, {} as Record<string, typeof filteredPermissions>)
 
-                  return Object.entries(groupedPermissions).map(([category, permissions]) => (
-                    <div key={category} className="mb-8">
-                      {/* Category Header - Matching the image */}
-                      <div className="flex items-center gap-3 mb-4">
-                        <h3 className="text-lg font-semibold capitalize">{category} Permissions</h3>
-                        <Badge variant="outline" className="text-xs">
-                          {permissions.length} permissions
-                        </Badge>
-                      </div>
+                    return Object.entries(groupedPermissions).map(([category, permissions]) => (
+                      <div key={category} className="mb-8">
+                        {/* Category Header - Matching the image */}
+                        <div className="flex items-center gap-3 mb-4">
+                          <h3 className="text-lg font-semibold capitalize">{category} Permissions</h3>
+                          <Badge variant="outline" className="text-xs">
+                            {permissions.length} permissions
+                          </Badge>
+                        </div>
 
-                      {/* Permissions Grid - 2 columns as shown in image */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {permissions.map((permission) => {
-                          const isSelected = selectedPermissions.includes(permission.id)
-                          const permissionMetadata = PERMISSION_METADATA.find(p => p.id === permission.name)
-                          
-                          return (
-                            <div 
-                              key={permission.id}
-                              data-permission-id={permission.id}
-                              data-selected={isSelected}
-                              className={`group relative p-4 rounded-lg border transition-all duration-200 cursor-pointer ${
-                                isSelected 
-                                  ? 'bg-primary/5 border-primary/30 shadow-md' 
-                                  : 'bg-card hover:bg-muted/50 border-border hover:shadow-sm'
-                              }`}
-                              onClick={() => handlePermissionToggle(permission.id, !isSelected)}
-                            >
-                              <div className="flex items-start gap-3">
-                                <Checkbox
-                                  id={permission.id}
-                                  checked={isSelected}
-                                  onCheckedChange={(checked) => handlePermissionToggle(permission.id, checked as boolean)}
-                                  className="mt-1 flex-shrink-0"
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-start justify-between mb-2">
-                                    <label
-                                      htmlFor={permission.id}
-                                      className="font-semibold cursor-pointer text-sm leading-tight text-foreground"
-                                    >
-                                      {permissionMetadata?.label || permission.name}
-                                    </label>
-                                    {isSelected && (
-                                      <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0 ml-2" />
-                                    )}
-                                  </div>
-                                  <p className="text-sm text-muted-foreground leading-relaxed">
-                                    {permission.description || permissionMetadata?.description || 'No description available'}
-                                  </p>
-                                </div>
+                        {/* Permissions Grid - 2 columns as shown in image */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {permissions.map((permission) => (
+                            <div key={permission.id} className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50">
+                              <Checkbox
+                                id={permission.id}
+                                checked={selectedPermissions.includes(permission.id)}
+                                onCheckedChange={(checked) => handlePermissionToggle(permission.id, checked as boolean)}
+                              />
+                              <div className="flex-1 min-w-0">
+                                <label htmlFor={permission.id} className="text-sm font-medium cursor-pointer">
+                                  {permission.name}
+                                </label>
+                                <p className="text-xs text-muted-foreground truncate">
+                                  {permission.description}
+                                </p>
                               </div>
                             </div>
-                          )
-                        })}
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))
-                })()}
+                    ))
+                  })()}
+                </>
               </div>
             )}
           </div>

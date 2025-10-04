@@ -3,14 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+// Removed Dialog imports - using custom full-screen modal
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -20,7 +13,7 @@ import type { User } from "@/lib/types/user"
 import { useCreateUser, useUpdateUser } from "@/hooks/use-users"
 import { useToast } from "@/hooks/use-toast"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertCircle, Shield } from "lucide-react"
+import { AlertCircle, Shield, X } from "lucide-react"
 
 interface UserDialogProps {
   user?: User
@@ -133,144 +126,231 @@ export function UserDialog({ user, open, onOpenChange, onUserUpdated }: UserDial
     }
   }
 
+  if (!open) return null
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{user ? "Edit User" : "Create User"}</DialogTitle>
-          <DialogDescription>
-            {user ? "Update the user information below." : "Fill in the details to create a new user."}
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {errorMessage && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription className="text-sm whitespace-pre-line">{errorMessage}</AlertDescription>
-            </Alert>
-          )}
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div 
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={() => onOpenChange(false)}
+      />
+      
+      {/* Full-screen modal */}
+      <div className="relative w-full h-full bg-background flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight">
+              {user ? "Edit User" : "Create User"}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {user ? "Update the user information below." : "Fill in the details to create a new user."}
+            </p>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onOpenChange(false)}
+            className="h-8 w-8"
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </Button>
+        </div>
+        
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto p-6">
+          <form onSubmit={handleSubmit} className="space-y-8 max-w-6xl mx-auto">
+            {errorMessage && (
+              <Alert variant="destructive" className="mb-6">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-sm whitespace-pre-line">{errorMessage}</AlertDescription>
+              </Alert>
+            )}
 
-          <div className="grid gap-2">
-            <Label htmlFor="name">Name</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              required
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              required
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="password">
-              Password{" "}
-              {user && <span className="text-muted-foreground text-sm">(leave blank to keep current)</span>}
-            </Label>
-            <Input
-              id="password"
-              type="password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              required={!user}
-              placeholder={user ? "Leave blank to keep current" : "Enter password"}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="picture">Profile Picture URL</Label>
-            <Input
-              id="picture"
-              type="url"
-              value={formData.picture}
-              onChange={(e) => setFormData({ ...formData, picture: e.target.value })}
-              placeholder="https://example.com/avatar.jpg"
-            />
-          </div>
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="emailVerified"
-              checked={formData.emailVerified}
-              onChange={(e) => setFormData({ ...formData, emailVerified: e.target.checked })}
-              className="rounded border-gray-300"
-            />
-            <Label htmlFor="emailVerified">Email verified</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="blocked"
-              checked={formData.blocked}
-              onChange={(e) => setFormData({ ...formData, blocked: e.target.checked })}
-              className="rounded border-gray-300"
-            />
-            <Label htmlFor="blocked">Block this user</Label>
-          </div>
+            {/* Basic Information Section */}
+            <div className="space-y-6">
+              <div className="border-b pb-4">
+                <h3 className="text-xl font-semibold">Basic Information</h3>
+                <p className="text-sm text-muted-foreground">User's personal details and contact information</p>
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-sm font-medium">Full Name</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Enter full name"
+                    required
+                    className="h-11"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-sm font-medium">Email Address</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="Enter email address"
+                    required
+                    className="h-11"
+                  />
+                </div>
+              </div>
 
-          {/* Role Selection */}
-          <div className="grid gap-4">
-            <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4" />
-              <Label>Assign Roles</Label>
-              {formData.roles.length > 0 && (
-                <Badge variant="secondary">{formData.roles.length} selected</Badge>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-sm font-medium">
+                    {user ? "New Password (leave blank to keep current)" : "Password"}
+                  </Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    placeholder={user ? "Leave blank to keep current" : "Enter password"}
+                    required={!user}
+                    className="h-11"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="picture" className="text-sm font-medium">Profile Picture URL</Label>
+                  <Input
+                    id="picture"
+                    type="url"
+                    value={formData.picture}
+                    onChange={(e) => setFormData({ ...formData, picture: e.target.value })}
+                    placeholder="https://example.com/avatar.jpg"
+                    className="h-11"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Account Status Section */}
+            <div className="space-y-6">
+              <div className="border-b pb-4">
+                <h3 className="text-xl font-semibold">Account Status</h3>
+                <p className="text-sm text-muted-foreground">Manage user account settings and verification status</p>
+              </div>
+              
+              <div className="flex items-center space-x-8">
+                <div className="flex items-center space-x-3">
+                  <Checkbox
+                    id="emailVerified"
+                    checked={formData.emailVerified}
+                    onCheckedChange={(checked) => setFormData({ ...formData, emailVerified: !!checked })}
+                  />
+                  <Label htmlFor="emailVerified" className="text-sm font-medium cursor-pointer">Email Verified</Label>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Checkbox
+                    id="blocked"
+                    checked={formData.blocked}
+                    onCheckedChange={(checked) => setFormData({ ...formData, blocked: !!checked })}
+                  />
+                  <Label htmlFor="blocked" className="text-sm font-medium cursor-pointer">Blocked Account</Label>
+                </div>
+              </div>
+            </div>
+
+            {/* Roles Section */}
+            <div className="space-y-6">
+              <div className="border-b pb-4">
+                <div className="flex items-center space-x-2">
+                  <Shield className="h-5 w-5" />
+                  <h3 className="text-xl font-semibold">User Roles</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">Assign roles to define user permissions and access levels</p>
+                {formData.roles.length > 0 && (
+                  <div className="mt-2">
+                    <Badge variant="secondary" className="text-xs">
+                      {formData.roles.length} role{formData.roles.length !== 1 ? 's' : ''} selected
+                    </Badge>
+                  </div>
+                )}
+              </div>
+              
+              {isLoadingRoles ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-sm text-muted-foreground">Loading available roles...</div>
+                </div>
+              ) : availableRoles.length === 0 ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <Shield className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-sm text-muted-foreground">No roles available</p>
+                    <p className="text-xs text-muted-foreground">Create a role first to assign to users</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {availableRoles.map((role) => {
+                    const isSelected = formData.roles.includes(role.id)
+                    return (
+                      <div 
+                        key={role.id} 
+                        className={`flex items-start space-x-3 p-4 border rounded-lg transition-all cursor-pointer ${
+                          isSelected 
+                            ? 'border-primary bg-primary/5' 
+                            : 'border-border hover:bg-accent/50'
+                        }`}
+                        onClick={() => handleRoleToggle(role.id)}
+                      >
+                        <Checkbox
+                          id={role.id}
+                          checked={isSelected}
+                          onCheckedChange={() => handleRoleToggle(role.id)}
+                          className="mt-1"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <Label htmlFor={role.id} className="text-sm font-medium cursor-pointer">
+                            {role.name}
+                          </Label>
+                          {role.description && (
+                            <p className="text-xs text-muted-foreground mt-1">{role.description}</p>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
               )}
             </div>
-            
-            {isLoadingRoles ? (
-              <div className="p-4 text-center text-muted-foreground">
-                Loading roles...
-              </div>
-            ) : availableRoles.length === 0 ? (
-              <div className="p-4 text-center text-muted-foreground">
-                No roles available. Create a role first.
-              </div>
+          </form>
+        </div>
+        
+        {/* Footer */}
+        <div className="flex items-center justify-end space-x-3 p-6 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="h-11 px-8"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            disabled={createUser.isPending || updateUser.isPending}
+            onClick={handleSubmit}
+            className="h-11 px-8"
+          >
+            {createUser.isPending || updateUser.isPending ? (
+              <>
+                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                {user ? "Updating..." : "Creating..."}
+              </>
             ) : (
-              <div className="grid gap-2 max-h-40 overflow-y-auto border rounded-lg p-4">
-                {availableRoles.map((role) => {
-                  const isSelected = formData.roles.includes(role.id)
-                  return (
-                    <div key={role.id} className="flex items-start gap-3 p-2 hover:bg-muted/50 rounded">
-                      <Checkbox
-                        id={role.id}
-                        checked={isSelected}
-                        onCheckedChange={() => handleRoleToggle(role.id)}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <label
-                          htmlFor={role.id}
-                          className="font-medium cursor-pointer"
-                        >
-                          {role.name}
-                        </label>
-                        <p className="text-sm text-muted-foreground">
-                          {role.description}
-                        </p>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
+              user ? "Update User" : "Create User"
             )}
-          </div>
-
-          <DialogFooter className="mt-6">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={createUser.isPending || updateUser.isPending}>
-              {user ? "Update" : "Create"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          </Button>
+        </div>
+      </div>
+    </div>
   )
 }

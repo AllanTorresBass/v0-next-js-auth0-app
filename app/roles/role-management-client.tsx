@@ -57,9 +57,9 @@ export function RoleManagementClient() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        <Card>
-          <CardHeader>
+      <div className="container mx-auto px-4 py-8 w-[1550px]">
+        <Card className="w-[1250px]">
+          <CardHeader className="w-[1250px]">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
                 <CardTitle className="text-3xl flex items-center gap-2">
@@ -88,7 +88,7 @@ export function RoleManagementClient() {
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="w-[1250px]">
             {error && <SetupStatusBanner error={error} />}
 
             <div className="flex items-center gap-2 mb-6">

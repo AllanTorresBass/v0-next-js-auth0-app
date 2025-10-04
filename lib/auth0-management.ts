@@ -1,3 +1,5 @@
+import { withRateLimit } from './rate-limiter'
+
 interface Auth0TokenResponse {
   access_token: string
   token_type: string
@@ -98,21 +100,28 @@ export interface UpdateUserData {
 }
 
 export async function getAllUsers(): Promise<Auth0User[]> {
-  const token = await getManagementToken()
-  const domain = process.env.AUTH0_ISSUER_BASE_URL!.replace("https://", "")
+  return withRateLimit(async () => {
+    const token = await getManagementToken()
+    const domain = process.env.AUTH0_ISSUER_BASE_URL!.replace("https://", "")
 
-  const response = await fetch(`https://${domain}/api/v2/users`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
+    const response = await fetch(`https://${domain}/api/v2/users`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    })
+
+    if (!response.ok) {
+      const error = new Error(`Failed to get users: ${response.statusText}`)
+      // Add response details for rate limit detection
+      ;(error as any).statusText = response.statusText
+      ;(error as any).status = response.status
+      ;(error as any).retryAfter = response.headers.get('retry-after')
+      throw error
+    }
+
+    return response.json()
   })
-
-  if (!response.ok) {
-    throw new Error(`Failed to get users: ${response.statusText}`)
-  }
-
-  return response.json()
 }
 
 export async function getUser(userId: string): Promise<Auth0User> {
@@ -238,22 +247,28 @@ export interface UpdateRoleData {
 }
 
 export async function getAllRoles(): Promise<Auth0Role[]> {
-  const token = await getManagementToken()
-  const domain = process.env.AUTH0_ISSUER_BASE_URL!.replace("https://", "")
+  return withRateLimit(async () => {
+    const token = await getManagementToken()
+    const domain = process.env.AUTH0_ISSUER_BASE_URL!.replace("https://", "")
 
-  const response = await fetch(`https://${domain}/api/v2/roles`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
+    const response = await fetch(`https://${domain}/api/v2/roles`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    })
+
+    if (!response.ok) {
+      const error = new Error(`Failed to fetch roles: ${response.statusText}`)
+      ;(error as any).statusText = response.statusText
+      ;(error as any).status = response.status
+      ;(error as any).retryAfter = response.headers.get('retry-after')
+      throw error
+    }
+
+    return response.json()
   })
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch roles: ${response.statusText}`)
-  }
-
-  return response.json()
 }
 
 export async function getRole(roleId: string): Promise<Auth0Role> {
@@ -339,6 +354,7 @@ export async function deleteRole(roleId: string): Promise<void> {
 
 // Permission Management Functions
 export interface Auth0Permission {
+  category: string;
   id: string
   name: string
   description: string
@@ -347,22 +363,28 @@ export interface Auth0Permission {
 }
 
 export async function getAllPermissions(): Promise<Auth0Permission[]> {
-  const token = await getManagementToken()
-  const domain = process.env.AUTH0_ISSUER_BASE_URL!.replace("https://", "")
+  return withRateLimit(async () => {
+    const token = await getManagementToken()
+    const domain = process.env.AUTH0_ISSUER_BASE_URL!.replace("https://", "")
 
-  const response = await fetch(`https://${domain}/api/v2/permissions`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
+    const response = await fetch(`https://${domain}/api/v2/permissions`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    })
+
+    if (!response.ok) {
+      const error = new Error(`Failed to fetch permissions: ${response.statusText}`)
+      ;(error as any).statusText = response.statusText
+      ;(error as any).status = response.status
+      ;(error as any).retryAfter = response.headers.get('retry-after')
+      throw error
+    }
+
+    return response.json()
   })
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch permissions: ${response.statusText}`)
-  }
-
-  return response.json()
 }
 
 export async function assignRolePermissions(roleId: string, permissionIds: string[]): Promise<void> {
@@ -426,20 +448,26 @@ export async function removeRolePermissions(roleId: string, permissionIds: strin
 }
 
 export async function getRolePermissions(roleId: string): Promise<Auth0Permission[]> {
-  const token = await getManagementToken()
-  const domain = process.env.AUTH0_ISSUER_BASE_URL!.replace("https://", "")
+  return withRateLimit(async () => {
+    const token = await getManagementToken()
+    const domain = process.env.AUTH0_ISSUER_BASE_URL!.replace("https://", "")
 
-  const response = await fetch(`https://${domain}/api/v2/roles/${encodeURIComponent(roleId)}/permissions`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
+    const response = await fetch(`https://${domain}/api/v2/roles/${encodeURIComponent(roleId)}/permissions`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    })
+
+    if (!response.ok) {
+      const error = new Error(`Failed to fetch role permissions: ${response.statusText}`)
+      ;(error as any).statusText = response.statusText
+      ;(error as any).status = response.status
+      ;(error as any).retryAfter = response.headers.get('retry-after')
+      throw error
+    }
+
+    return response.json()
   })
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch role permissions: ${response.statusText}`)
-  }
-
-  return response.json()
 }

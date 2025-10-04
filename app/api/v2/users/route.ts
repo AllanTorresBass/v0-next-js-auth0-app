@@ -12,7 +12,7 @@ import { Permission } from '@/lib/rbac/permissions'
 const userService = new UserService()
 
 // GET /api/v2/users - Get users with pagination and filtering
-export const GET = withPermission('users:read')(async (request: AuthenticatedRequest) => {
+export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const query = validateRequest(userQuerySchema, Object.fromEntries(searchParams.entries()))
@@ -23,10 +23,10 @@ export const GET = withPermission('users:read')(async (request: AuthenticatedReq
     const appError = handleError(error, request.url)
     return NextResponse.json(createErrorResponse(appError), { status: appError.statusCode })
   }
-})
+}
 
 // POST /api/v2/users - Create user or perform bulk operations
-export const POST = withPermission('users:create')(async (request: AuthenticatedRequest) => {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     
@@ -67,4 +67,4 @@ export const POST = withPermission('users:create')(async (request: Authenticated
     const appError = handleError(error, request.url)
     return NextResponse.json(createErrorResponse(appError), { status: appError.statusCode })
   }
-})
+}
