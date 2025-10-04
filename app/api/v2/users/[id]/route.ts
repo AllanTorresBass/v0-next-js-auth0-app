@@ -38,13 +38,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 }
 
 // DELETE /api/v2/users/[id] - Delete user
-export const DELETE = withPermission('users:delete')(async (request: AuthenticatedRequest, { params }: { params: Promise<{ id: string }> }) => {
+export const DELETE = withPermission('users:delete')(async (request: AuthenticatedRequest, context: { params: Promise<{ id: string }> }) => {
   try {
-    const { id } = await params
+    const { id } = await context.params
     const result = await userService.deleteUser(id)
     return NextResponse.json(result)
   } catch (error: any) {
     const appError = handleError(error, request.url)
     return NextResponse.json(createErrorResponse(appError), { status: appError.statusCode })
   }
-}
+})

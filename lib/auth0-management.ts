@@ -6,6 +6,28 @@ interface Auth0TokenResponse {
   expires_in: number
 }
 
+interface UserRoleAssignment {
+  id: string
+  name: string
+  description: string
+  assignment: 'Direct' | 'Role'
+}
+
+interface UserPermissionAssignment {
+  id: string
+  name: string
+  description: string
+  resource_server_identifier: string
+  resource_server_name: string
+  assignment: 'Direct' | 'Role'
+}
+
+interface CreatePermissionData {
+  name: string
+  description: string
+  resource_server_identifier: string
+}
+
 let cachedToken: { token: string; expiresAt: number } | null = null
 
 async function getManagementToken(): Promise<string> {
@@ -387,6 +409,175 @@ export async function getAllPermissions(): Promise<Auth0Permission[]> {
   })
 }
 
+export async function createPermission(data: CreatePermissionData): Promise<Auth0Permission> {
+  return withRateLimit(async () => {
+    const token = await getManagementToken()
+    const domain = process.env.AUTH0_ISSUER_BASE_URL!.replace("https://", "")
+    
+    const response = await fetch(`https://${domain}/api/v2/permissions`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to create permission: ${response.statusText}`)
+    }
+
+    return response.json()
+  })
+}
+
+// User Roles Functions
+export async function getUserRoles(userId: string): Promise<UserRoleAssignment[]> {
+  return withRateLimit(async () => {
+    const token = await getManagementToken()
+    const domain = process.env.AUTH0_ISSUER_BASE_URL!.replace("https://", "")
+    
+    const response = await fetch(`https://${domain}/api/v2/users/${encodeURIComponent(userId)}/roles`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    })
+
+    if (!response.ok) {
+      if (response.status === 429) {
+        const emptyResult: UserRoleAssignment[] = []
+        return emptyResult
+      }
+      throw new Error(`Failed to get user roles: ${response.statusText}`)
+    }
+
+    const roles: Auth0Role[] = await response.json()
+    
+    return roles.map((role) => ({
+      id: role.id,
+      name: role.name,
+      description: role.description || '',
+      assignment: 'Direct' as const,
+    }))
+  })
+}
+
+export async function assignUserRoles(userId: string, roleIds: string[]): Promise<void> {
+  return withRateLimit(async () => {
+    const token = await getManagementToken()
+    const domain = process.env.AUTH0_ISSUER_BASE_URL!.replace("https://", "")
+    
+    const response = await fetch(`https://${domain}/api/v2/users/${encodeURIComponent(userId)}/roles`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ roles: roleIds }),
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to assign user roles: ${response.statusText}`)
+    }
+  })
+}
+
+export async function removeUserRoles(userId: string, roleIds: string[]): Promise<void> {
+  return withRateLimit(async () => {
+    const token = await getManagementToken()
+    const domain = process.env.AUTH0_ISSUER_BASE_URL!.replace("https://", "")
+    
+    const response = await fetch(`https://${domain}/api/v2/users/${encodeURIComponent(userId)}/roles`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ roles: roleIds }),
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to remove user roles: ${response.statusText}`)
+    }
+  })
+}
+
+// User Permissions Functions
+export async function getUserPermissions(userId: string): Promise<UserPermissionAssignment[]> {
+  return withRateLimit(async () => {
+    const token = await getManagementToken()
+    const domain = process.env.AUTH0_ISSUER_BASE_URL!.replace("https://", "")
+    
+    const response = await fetch(`https://${domain}/api/v2/users/${encodeURIComponent(userId)}/permissions`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    })
+
+    if (!response.ok) {
+      if (response.status === 429) {
+        const emptyResult: UserPermissionAssignment[] = []
+        return emptyResult
+      }
+      throw new Error(`Failed to get user permissions: ${response.statusText}`)
+    }
+
+    const permissions: Auth0Permission[] = await response.json()
+    
+    return permissions.map((permission) => ({
+      id: permission.id,
+      name: permission.name,
+      description: permission.description || '',
+      resource_server_identifier: permission.resource_server_identifier,
+      resource_server_name: permission.resource_server_name,
+      assignment: 'Direct' as const,
+    }))
+  })
+}
+
+export async function assignUserPermissions(userId: string, permissionIds: string[]): Promise<void> {
+  return withRateLimit(async () => {
+    const token = await getManagementToken()
+    const domain = process.env.AUTH0_ISSUER_BASE_URL!.replace("https://", "")
+    
+    const response = await fetch(`https://${domain}/api/v2/users/${encodeURIComponent(userId)}/permissions`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ permissions: permissionIds }),
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to assign user permissions: ${response.statusText}`)
+    }
+  })
+}
+
+export async function removeUserPermissions(userId: string, permissionIds: string[]): Promise<void> {
+  return withRateLimit(async () => {
+    const token = await getManagementToken()
+    const domain = process.env.AUTH0_ISSUER_BASE_URL!.replace("https://", "")
+    
+    const response = await fetch(`https://${domain}/api/v2/users/${encodeURIComponent(userId)}/permissions`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ permissions: permissionIds }),
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to remove user permissions: ${response.statusText}`)
+    }
+  })
+}
+
+// Role Permission Functions
 export async function assignRolePermissions(roleId: string, permissionIds: string[]): Promise<void> {
   const token = await getManagementToken()
   const domain = process.env.AUTH0_ISSUER_BASE_URL!.replace("https://", "")

@@ -29,6 +29,31 @@ export function ProfileClient({ user }: ProfileClientProps) {
       .slice(0, 2)
   }
 
+  // Handle case where user is undefined
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <DashboardHeader />
+        <div className="container mx-auto px-4 py-8">
+          <Card className="max-w-2xl mx-auto">
+            <CardHeader>
+              <CardTitle>Profile</CardTitle>
+              <CardDescription>Your account information and settings</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Please log in to view your profile.</p>
+                <Button asChild className="mt-4">
+                  <a href="/auth/login">Login</a>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader />
@@ -59,11 +84,11 @@ export function ProfileClient({ user }: ProfileClientProps) {
               <div className="w-full space-y-4 mt-4">
                 <div className="flex justify-between py-2 border-b">
                   <span className="text-muted-foreground">User ID</span>
-                  <span className="font-mono text-sm">{user.sub}</span>
+                  <span className="font-mono text-sm">{user.sub || "N/A"}</span>
                 </div>
                 <div className="flex justify-between py-2 border-b">
                   <span className="text-muted-foreground">Email</span>
-                  <span className="font-mono text-sm">{user.email}</span>
+                  <span className="font-mono text-sm">{user.email || "N/A"}</span>
                 </div>
                 <div className="flex justify-between py-2 border-b">
                   <span className="text-muted-foreground">Role</span>
@@ -71,20 +96,20 @@ export function ProfileClient({ user }: ProfileClientProps) {
                 </div>
                 <div className="flex justify-between py-2 border-b">
                   <span className="text-muted-foreground">Roles Count</span>
-                  <span>{user.roles?.length || 0}</span>
+                  <span>{(user as any).roles?.length || 0}</span>
                 </div>
                 <div className="flex justify-between py-2 border-b">
                   <span className="text-muted-foreground">Permissions Count</span>
-                  <span>{user.permissions?.length || 0}</span>
+                  <span>{(user as any).permissions?.length || 0}</span>
                 </div>
               </div>
 
               {/* Roles and Permissions Display */}
-              {user.roles && user.roles.length > 0 && (
+              {(user as any).roles && (user as any).roles.length > 0 && (
                 <div className="w-full space-y-4 mt-6">
                   <h3 className="text-lg font-semibold">Roles</h3>
                   <div className="flex flex-wrap gap-2">
-                    {user.roles.map((role, index) => (
+                    {(user as any).roles.map((role: any, index: number) => (
                       <Badge key={index} variant="outline">
                         {role.name}
                       </Badge>
@@ -93,11 +118,11 @@ export function ProfileClient({ user }: ProfileClientProps) {
                 </div>
               )}
 
-              {user.permissions && user.permissions.length > 0 && (
+              {(user as any).permissions && (user as any).permissions.length > 0 && (
                 <div className="w-full space-y-4 mt-6">
                   <h3 className="text-lg font-semibold">Permissions</h3>
                   <div className="flex flex-wrap gap-2">
-                    {user.permissions.map((permission, index) => (
+                    {(user as any).permissions.map((permission: any, index: number) => (
                       <Badge key={index} variant="secondary">
                         {permission.name}
                       </Badge>

@@ -101,14 +101,14 @@ export function withAuth(handler: (request: AuthenticatedRequest) => Promise<Nex
 }
 
 export function withPermission(permission: Permission) {
-  return (handler: (request: AuthenticatedRequest) => Promise<NextResponse>) => {
-    return async (request: NextRequest): Promise<NextResponse> => {
+  return (handler: (request: AuthenticatedRequest, context?: any) => Promise<NextResponse>) => {
+    return async (request: NextRequest, context?: any): Promise<NextResponse> => {
       try {
         const user = await requirePermission(permission)(request)
         const authenticatedRequest = request as AuthenticatedRequest
         authenticatedRequest.user = user
         
-        return await handler(authenticatedRequest)
+        return await handler(authenticatedRequest, context)
       } catch (error: any) {
         if (error instanceof AuthenticationError) {
           return NextResponse.json(
